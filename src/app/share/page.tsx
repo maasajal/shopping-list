@@ -49,8 +49,9 @@ export default function SharePage() {
           }
         }
       } catch (err) {
+        console.log(err);
         if (mounted) {
-          setError(`Error loading shared list ${err}`);
+          setError("Error loading shared list");
         }
       }
     };

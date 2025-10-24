@@ -16,7 +16,7 @@ import {
 import { Close, Share, ContentCopy } from "@mui/icons-material";
 import { QRCodeSVG } from "qrcode.react";
 import { ShoppingList } from "@/types";
-import { generateShareableLink } from "@/lib/shareUtils";
+import { generateShortShareableLink } from "@/lib/shortLinkUtils";
 
 interface QRGeneratorProps {
   list: ShoppingList;
@@ -26,11 +26,11 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
   const [open, setOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
-  // Generate shareable link
-  const shareableLink = generateShareableLink(list);
+  // Generate short shareable link
+  const shareableLink = generateShortShareableLink(list);
 
   const handleShare = async () => {
-    if (navigator.share) {
+    if (navigator.share && shareableLink) {
       try {
         await navigator.share({
           title: `${list.name} - Shopping List`,
@@ -49,6 +49,8 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
   };
 
   const copyToClipboard = async () => {
+    if (!shareableLink) return;
+
     try {
       await navigator.clipboard.writeText(shareableLink);
       setCopySuccess(true);
@@ -67,15 +69,7 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
     }
   };
 
-  // Replace the date handling in QRGenerator with:
-//   const getSafeDate = (date: Date | string): string => {
-//     if (date instanceof Date) {
-//       return date.toISOString();
-//     }
-//     return date;
-//   };
-
-  const getSafeDateDisplay = (date: Date | string): string => {
+  const getSafeDateDisplay = (date: Date | string) => {
     if (date instanceof Date) {
       return date.toLocaleDateString();
     }
@@ -86,21 +80,6 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
     }
   };
 
-  // Then in the qrData:
-//   const qrData = JSON.stringify({
-//     type: "shopping-list",
-//     version: "1.0",
-//     data: {
-//       name: list.name,
-//       items: list.items.map((item) => ({
-//         ...item,
-//         createdAt: getSafeDate(item.createdAt),
-//       })),
-//       createdAt: getSafeDate(list.createdAt),
-//       updatedAt: getSafeDate(list.updatedAt),
-//     },
-//   });
-
   return (
     <>
       <Button
@@ -108,6 +87,7 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
         startIcon={<Share />}
         onClick={handleShare}
         sx={{ mb: 2 }}
+        disabled={!shareableLink}
       >
         Share List
       </Button>
@@ -150,9 +130,11 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
             </Typography>
 
             {/* QR Code */}
-            <Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
-              <QRCodeSVG value={shareableLink} size={200} />
-            </Box>
+            {shareableLink && (
+              <Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                <QRCodeSVG value={shareableLink} size={200} />
+              </Box>
+            )}
 
             {/* Shareable Link */}
             <Box sx={{ width: "100%" }}>
@@ -171,12 +153,13 @@ export default function QRGenerator({ list }: QRGeneratorProps) {
                     fontSize: "0.8rem",
                   }}
                 >
-                  {shareableLink}
+                  {shareableLink || "Generating link..."}
                 </Typography>
                 <IconButton
                   onClick={copyToClipboard}
                   color="primary"
                   size="small"
+                  disabled={!shareableLink}
                 >
                   <ContentCopy />
                 </IconButton>

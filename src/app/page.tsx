@@ -41,6 +41,8 @@ export default function Home() {
 
   // Add this useEffect after your other hooks
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleImport = () => {
       try {
         const sharedListData = localStorage.getItem("shared-list-import");

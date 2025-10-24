@@ -1,6 +1,11 @@
 import { ShoppingList } from "@/types";
 
 export function generateShareableLink(list: ShoppingList): string {
+  // Check if we're in a browser environment
+  if (typeof window === "undefined") {
+    return ""; // Return empty string during SSR
+  }
+
   // Create a simple shareable URL with list data
   const listData = {
     name: list.name,
@@ -23,6 +28,11 @@ export function parseShareableLink(
   name: string;
   items: Array<{ text: string; status: string; category: string }>;
 } | null {
+  // Check if we're in a browser environment
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   try {
     const urlObj = new URL(url);
     const base64Data = urlObj.searchParams.get("data");

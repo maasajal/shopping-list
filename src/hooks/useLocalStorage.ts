@@ -12,7 +12,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       if (item) {
         const parsed = JSON.parse(item);
         // Convert date strings back to Date objects
-        return reviveDates(parsed);
+        return reviveDates(parsed) as T;
       }
       return initialValue;
     } catch (error) {
@@ -47,7 +47,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 // Helper function to convert date strings back to Date objects
-function reviveDates(obj: any): any {
+function reviveDates(obj: unknown): unknown {
   if (obj === null || obj === undefined) return obj;
 
   if (typeof obj === "string") {
@@ -64,11 +64,9 @@ function reviveDates(obj: any): any {
   }
 
   if (typeof obj === "object") {
-    const revived: any = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        revived[key] = reviveDates(obj[key]);
-      }
+    const revived: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      revived[key] = reviveDates(value);
     }
     return revived;
   }

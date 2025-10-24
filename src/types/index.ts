@@ -3,7 +3,7 @@ export interface ShoppingItem {
   text: string;
   status: "todo" | "done";
   category: string;
-  createdAt: Date;
+  createdAt: Date | string; // Allow both Date and string
 }
 
 export interface ShoppingList {
@@ -11,8 +11,8 @@ export interface ShoppingList {
   name: string;
   items: ShoppingItem[];
   categories: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string; // Allow both Date and string
+  updatedAt: Date | string; // Allow both Date and string
 }
 
 export type Category = {
@@ -21,3 +21,14 @@ export type Category = {
   color: string;
   icon: string;
 };
+
+export interface SharedListItem {
+  text: string;
+  status: "todo" | "done";
+  category: string;
+}
+
+export interface SharedListData {
+  name: string;
+  items: SharedListItem[];
+}

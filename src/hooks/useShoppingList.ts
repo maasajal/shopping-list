@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingItem, ShoppingList } from "@/types";
 import { useLocalStorage } from "./useLocalStorage";
 import { DEFAULT_CATEGORIES, STORAGE_KEYS } from "@/lib/constants";
@@ -15,13 +15,30 @@ const createDefaultList = (): ShoppingList => ({
   updatedAt: new Date(),
 });
 
+// Helper to ensure dates are properly handled when loading from localStorage
+const ensureDateObjects = (list: ShoppingList): ShoppingList => ({
+  ...list,
+  createdAt: new Date(list.createdAt),
+  updatedAt: new Date(list.updatedAt),
+  items: list.items.map((item) => ({
+    ...item,
+    createdAt: new Date(item.createdAt),
+  })),
+});
+
 export function useShoppingList() {
-  const [list, setList] = useLocalStorage<ShoppingList>(
+  const [rawList, setRawList] = useLocalStorage<ShoppingList>(
     STORAGE_KEYS.SHOPPING_LIST,
     createDefaultList()
   );
+  const [list, setList] = useState<ShoppingList>(createDefaultList());
   const [filter, setFilter] = useState<"all" | "todo" | "done">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Ensure dates are proper Date objects when loading from localStorage
+  useEffect(() => {
+    setList(ensureDateObjects(rawList));
+  }, [rawList]);
 
   // Add new item
   const addItem = (text: string, category: string = "other") => {
@@ -30,55 +47,55 @@ export function useShoppingList() {
       text: text.trim(),
       status: "todo",
       category,
-      createdAt: new Date(), // Always use new Date() here
+      createdAt: new Date(),
     };
 
-    setList((prev) => ({
+    setRawList((prev) => ({
       ...prev,
       items: [newItem, ...prev.items],
-      updatedAt: new Date(), // Always use new Date() here
+      updatedAt: new Date(),
     }));
   };
 
   // Remove item
   const removeItem = (id: string) => {
-    setList((prev) => ({
+    setRawList((prev) => ({
       ...prev,
       items: prev.items.filter((item) => item.id !== id),
-      updatedAt: new Date(), // Always use new Date() here
+      updatedAt: new Date(),
     }));
   };
 
   // Toggle item status
   const toggleItemStatus = (id: string) => {
-    setList((prev) => ({
+    setRawList((prev) => ({
       ...prev,
       items: prev.items.map((item) =>
         item.id === id
           ? { ...item, status: item.status === "todo" ? "done" : "todo" }
           : item
       ),
-      updatedAt: new Date(), // Always use new Date() here
+      updatedAt: new Date(),
     }));
   };
 
   // Buy again (move from done to todo)
   const buyAgain = (id: string) => {
-    setList((prev) => ({
+    setRawList((prev) => ({
       ...prev,
       items: prev.items.map((item) =>
         item.id === id ? { ...item, status: "todo" } : item
       ),
-      updatedAt: new Date(), // Always use new Date() here
+      updatedAt: new Date(),
     }));
   };
 
   // Clear all completed items
   const clearCompleted = () => {
-    setList((prev) => ({
+    setRawList((prev) => ({
       ...prev,
       items: prev.items.filter((item) => item.status !== "done"),
-      updatedAt: new Date(), // Always use new Date() here
+      updatedAt: new Date(),
     }));
   };
 

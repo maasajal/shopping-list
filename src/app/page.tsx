@@ -16,6 +16,8 @@ import CategoryFilter from "./components/CategoryFilter";
 import QRGenerator from "./components/QRGenerator";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import theme from "@/lib/theme";
+import { useEffect } from "react";
+import { SharedListData, SharedListItem } from "@/types";
 
 export default function Home() {
   const {
@@ -36,6 +38,44 @@ export default function Home() {
     (item) => item.status === "done"
   ).length;
   const todoCount = list.items.filter((item) => item.status === "todo").length;
+
+  // Add this useEffect after your other hooks
+  useEffect(() => {
+    const handleImport = () => {
+      try {
+        const sharedListData = localStorage.getItem("shared-list-import");
+        const urlParams = new URLSearchParams(window.location.search);
+        const shouldImport = urlParams.get("import") === "true";
+
+        if (sharedListData && shouldImport) {
+          // Use setTimeout to avoid synchronous state updates
+          setTimeout(() => {
+            try {
+              const importedList: SharedListData = JSON.parse(sharedListData);
+
+              // Add imported items to current list with proper typing
+              importedList.items.forEach((item: SharedListItem) => {
+                addItem(item.text, item.category);
+              });
+
+              // Clear the imported data
+              localStorage.removeItem("shared-list-import");
+
+              // Remove the import parameter from URL without refresh
+              const newUrl = window.location.pathname;
+              window.history.replaceState({}, "", newUrl);
+            } catch (error) {
+              console.error("Error importing shared list:", error);
+            }
+          }, 0);
+        }
+      } catch (error) {
+        console.error("Error in import handler:", error);
+      }
+    };
+
+    handleImport();
+  }, [addItem]); // Only depend on addItem
 
   return (
     <ThemeProvider theme={theme}>
@@ -84,13 +124,15 @@ export default function Home() {
           </Paper>
         </Box>
 
-        {/* Rest of your component remains the same */}
+        {/* Action Buttons */}
         <Box
           sx={{
             display: "flex",
             gap: 2,
             justifyContent: "space-between",
             mb: 2,
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
           }}
         >
           <QRGenerator list={list} />
@@ -101,6 +143,10 @@ export default function Home() {
               color="secondary"
               startIcon={<DeleteSweep />}
               onClick={clearCompleted}
+              sx={{
+                minWidth: { xs: "100%", sm: "auto" },
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Clear Completed ({completedCount})
             </Button>

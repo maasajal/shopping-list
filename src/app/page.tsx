@@ -1,65 +1,142 @@
-import Image from "next/image";
+"use client";
+
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  Paper,
+  CssBaseline,
+  ThemeProvider,
+} from "@mui/material";
+import { DeleteSweep } from "@mui/icons-material";
+import AddItemForm from "./components/AddItemForm";
+import ItemList from "./components/ItemList";
+import CategoryFilter from "./components/CategoryFilter";
+import QRGenerator from "./components/QRGenerator";
+import { useShoppingList } from "@/hooks/useShoppingList";
+import theme from "@/lib/theme";
 
 export default function Home() {
+  const {
+    list,
+    filteredItems,
+    filter,
+    setFilter,
+    selectedCategory,
+    setSelectedCategory,
+    addItem,
+    removeItem,
+    toggleItemStatus,
+    buyAgain,
+    clearCompleted,
+  } = useShoppingList();
+
+  const completedCount = list.items.filter(
+    (item) => item.status === "done"
+  ).length;
+  const todoCount = list.items.filter((item) => item.status === "todo").length;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {/* Header */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography
+            variant="h3"
+            component="h1"
+            gutterBottom
+            fontWeight="bold"
+          >
+            🛒 Shopping List
+          </Typography>
+          <Typography variant="h6" color="textSecondary" gutterBottom>
+            Your smart shopping companion
+          </Typography>
+
+          {/* Stats */}
+          <Paper elevation={1} sx={{ p: 2, mt: 2, display: "inline-block" }}>
+            <Box sx={{ display: "flex", gap: 3 }}>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h6" color="primary">
+                  {todoCount}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  To Buy
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h6" color="success.main">
+                  {completedCount}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Done
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h6">{list.items.length}</Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Total
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Rest of your component remains the same */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            justifyContent: "space-between",
+            mb: 2,
+          }}
+        >
+          <QRGenerator list={list} />
+
+          {completedCount > 0 && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<DeleteSweep />}
+              onClick={clearCompleted}
+            >
+              Clear Completed ({completedCount})
+            </Button>
+          )}
+        </Box>
+
+        <AddItemForm onAddItem={addItem} />
+
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          filter={filter}
+          onFilterChange={setFilter}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <ItemList
+          items={filteredItems}
+          onToggleStatus={toggleItemStatus}
+          onRemoveItem={removeItem}
+          onBuyAgain={buyAgain}
+        />
+
+        <Box
+          sx={{
+            textAlign: "center",
+            mt: 4,
+            pt: 2,
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="caption" color="textSecondary">
+            Data stored locally in your browser • Share via QR code
+          </Typography>
+        </Box>
+      </Container>
+    </ThemeProvider>
   );
 }
